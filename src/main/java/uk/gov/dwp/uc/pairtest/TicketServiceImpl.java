@@ -16,8 +16,8 @@ public class TicketServiceImpl implements TicketService {
     final static String ERROR_NOT_ENOUGH_ADULT_TICKETS = "There are not enough adults for infants to sit on";
     final static String ERROR_TOO_MANY_TICKETS = "Number of tickets to purchase exceeds " + MAX_NUMBER_OF_TICKETS;
 
-    private TicketPaymentService ticketPaymentService;
-    private SeatReservationService seatReservationService;
+    private final TicketPaymentService ticketPaymentService;
+    private final SeatReservationService seatReservationService;
 
     TicketServiceImpl(TicketPaymentService ticketPaymentService, SeatReservationService seatReservationService) {
         this.ticketPaymentService = ticketPaymentService;
@@ -25,9 +25,16 @@ public class TicketServiceImpl implements TicketService {
     }
 
     /**
-     * Should only have private methods other than the one below.
+     * Purchases tickets and reserves seats, subjected to the following criteria:
+     * 
+     * 1. At least one ticket must be for an adult
+     * 2. A maximum of 20 tickets can be purchased
+     * 3. A valid account id is specified
+     * 4. The number of adult tickets at least equals the number of infant tickets
+     * 
+     * InvalidPurchaseException is thrown if any one of the criteria is violated
+     * and the exception message indicates the nature of the violation.
      */
-
     @Override
     public void purchaseTickets(Long accountId, TicketTypeRequest... ticketTypeRequests) throws InvalidPurchaseException {
 
@@ -58,21 +65,19 @@ public class TicketServiceImpl implements TicketService {
         seatReservationService.reserveSeat(accountId, totalSeats);
     }
 
-    private int calculateTotalTickets(TicketTypeRequest[] ticketTypeRequests) {
+    private static int calculateTotalTickets(TicketTypeRequest[] ticketTypeRequests) {
         return Stream.of(ticketTypeRequests).mapToInt(r -> r.getNoOfTickets()).sum();
     }
 
-    private boolean isThereAnAdultTicket(TicketTypeRequest[] ticketTypeRequests) {
+    private static boolean isThereAnAdultTicket(TicketTypeRequest[] ticketTypeRequests) {
         return Stream.of(ticketTypeRequests).anyMatch(r -> r.getTicketType() == TicketTypeRequest.Type.ADULT && r.getNoOfTickets() > 0);
     }
 
-    /**
+    /*
      * Establishes if there is enough adults to sit all the infants on their lap.
      * An infant can sit on one adult's lap.
-     * @param ticketTypeRequests
-     * @return 
      */
-    private boolean isThereEnoughAdultsForInfants(TicketTypeRequest[] ticketTypeRequests) {
+    private static boolean isThereEnoughAdultsForInfants(TicketTypeRequest[] ticketTypeRequests) {
         var totalAdults = Stream.of(ticketTypeRequests)
                 .filter(r -> r.getTicketType() == TicketTypeRequest.Type.ADULT)
                 .mapToInt(r -> r.getNoOfTickets())
@@ -84,17 +89,15 @@ public class TicketServiceImpl implements TicketService {
         return totalAdults >= totalInfants;
     }
 
-    private int calculateTotalPayment(TicketTypeRequest[] ticketTypeRequests) {
+    private static int calculateTotalPayment(TicketTypeRequest[] ticketTypeRequests) {
         return Stream.of(ticketTypeRequests).mapToInt(r -> r.getTicketType().price * r.getNoOfTickets()).sum();
     }
 
-    /**
+    /*
      * Calculates total number of seats for all adults and children.
-     * Infants sit on adults' lap and therefore are excluded.
-     * @param ticketTypeRequests
-     * @return
+     * Infants sit on adults' lap and are not counted.
      */
-    private int calculateTotalSeats(TicketTypeRequest[] ticketTypeRequests) {
+    private static int calculateTotalSeats(TicketTypeRequest[] ticketTypeRequests) {
         return Stream.of(ticketTypeRequests)
                     .filter(r -> r.getTicketType() == TicketTypeRequest.Type.ADULT || r.getTicketType() == TicketTypeRequest.Type.CHILD)
                     .mapToInt(r -> r.getNoOfTickets())

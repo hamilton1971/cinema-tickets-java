@@ -80,25 +80,17 @@ public class TicketServiceImplTest {
     }
 
     @Test
-    public void rejectChildTicketsWithoutAdultTicket() {
+    public void rejectNoAdultTickets() {
         invalidPurchaseException.expect(InvalidPurchaseException.class);
         invalidPurchaseException.expectMessage(TicketServiceImpl.ERROR_NO_ADULT_TICKETS);
 
-        var ticketRequest = new TicketTypeRequest(TicketTypeRequest.Type.CHILD, 1);
-        ticketService.purchaseTickets(Long.valueOf(1L), ticketRequest);      
+        var childTicketRequest = new TicketTypeRequest(TicketTypeRequest.Type.CHILD, 1);
+        var infantTicketRequest = new TicketTypeRequest(TicketTypeRequest.Type.INFANT, 1);
+        ticketService.purchaseTickets(Long.valueOf(1L), childTicketRequest, infantTicketRequest);      
     }
 
     @Test
-    public void rejectInfantTicketsWithoutAdultTicket() {
-        invalidPurchaseException.expect(InvalidPurchaseException.class);
-        invalidPurchaseException.expectMessage(TicketServiceImpl.ERROR_NO_ADULT_TICKETS);
-
-        var ticketRequest = new TicketTypeRequest(TicketTypeRequest.Type.INFANT, 1);
-        ticketService.purchaseTickets(Long.valueOf(1L), ticketRequest);      
-    }
-
-    @Test
-    public void rejectIfInfantTicketsExceedAdultTickets() {
+    public void rejectInfantTicketsExceedAdultTickets() {
         invalidPurchaseException.expect(InvalidPurchaseException.class);
         invalidPurchaseException.expectMessage(TicketServiceImpl.ERROR_NOT_ENOUGH_ADULT_TICKETS);
 

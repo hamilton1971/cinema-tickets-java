@@ -1,13 +1,13 @@
 package uk.gov.dwp.uc.pairtest.domain;
 
-/**
- * Immutable Object
- */
-
+ /**
+  * Holds the type of ticket and its price plus the number of tickets required.
+  * Each instance should be immutable.
+  */
 public class TicketTypeRequest {
 
-    private int noOfTickets;
-    private Type type;
+    private final int noOfTickets;
+    private final Type type;
 
     public TicketTypeRequest(Type type, int noOfTickets) {
         this.type = type;
